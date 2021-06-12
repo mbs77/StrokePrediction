@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Stroke Prediction</string>
+    <string name="dialog_message">\"Hello\"</string>
+    <string name="dialog_title">\"Bye\"</string>
+</resources>
