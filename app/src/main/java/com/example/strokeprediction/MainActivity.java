@@ -1,6 +1,7 @@
 package com.example.strokeprediction;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -11,7 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -22,13 +25,15 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+
 public class MainActivity extends AppCompatActivity {
 
-    String[] employment = {"Public Sector", "Private Sector", "Never Employed", "Homemaker"};
-    String[] smoking = {"Smoker", "Never Smoked", "Former Smoker"};
+    String[] employment = {"Private Sector", "Self-Employed", "Public Sector", "Homemaker", "Never worked"};
+    String[] smoking = {"Never Smoked", "Former Smoker", "Smoker"};
 
     int age = -1;
-    int bmi =-1;
+    float bmi =-1;
     boolean hypertension = false;
     boolean gender = false;
     boolean heartDisease = false;
@@ -143,11 +148,11 @@ public class MainActivity extends AppCompatActivity {
         TextView tV = (TextView)findViewById(R.id.tvResidence);
         if (swHT.isChecked()){
             this.isUrban = true;
-            tV.setText("Urban");
+            tV.setText("Rural");
         }
         else {
             this.isUrban = false;
-            tV.setText("Rural");
+            tV.setText("Urban");
         }
 
     }
@@ -195,19 +200,19 @@ public class MainActivity extends AppCompatActivity {
             alert.show();
         }
 
-        int bmi = -1;
+        float bmi = -1;
         try {
-            bmi = Integer.parseInt(et1.getText().toString());
+            bmi = Float.parseFloat(et1.getText().toString());
         } catch(NumberFormatException nfe) {
             strBuffer = "Invalid BMI.\nEnter a valid number.";
             alert.setMessage(strBuffer);
             alert.show();
         }
 
-        if (bmi >= 19 && bmi <= 35){
+        if (bmi >= 10.0 && bmi <= 50.0){
             this.bmi = bmi;
         } else {
-            strBuffer = "Invalid BMI.\nEnter a BMI between 19 and 35.";
+            strBuffer = "Invalid BMI.\nEnter a BMI between 10 and 50.";
             alert.setMessage(strBuffer);
             alert.show();
         }
@@ -219,7 +224,6 @@ public class MainActivity extends AppCompatActivity {
             this.employmentStatus = spin.getSelectedItemPosition();
             this.smokingStatus = spin2.getSelectedItemPosition();
 
-        TextView tvBuffer = (TextView) findViewById(R.id.textView4); //Remove
 
         String buffer = this.age+ "," + this.bmi + "," +
                 (this.hypertension? 1 : 0) + "," +
@@ -245,30 +249,9 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            //tvBuffer.setText(jsoData.toString());
-
-        //Rest API Call
-
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="http://stroke-prediction-316017.wl.r.appspot.com/predict_prob";
-        StringRequest stringRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                // Display the first 500 characters of the response string.
-                //tvBuffer.setText("Response is: "+ response.substring(0,500));
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                //tvBuffer.setText("That didn't work!" + error.getMessage());
-            }
-        });
-            queue.add(stringRequest);
-
-
-
-
-
+            Context context = getApplicationContext();
+            String URL="https://stroke-prediction-316017.wl.r.appspot.com/predict_prob";
+            this.Submit(URL, jsoData.toString(), context);
 
 
         }
@@ -277,6 +260,63 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+
+    public void Submit(String URL, String data, Context context) {
+        final String savedata= data;
+
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+
+                    JSONObject objres =new JSONObject(response);
+                    String condition = objres.getString("Prediction");
+
+                    String prob = objres.getString("Prob");
+
+
+                    builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setMessage(R.string.dialog_message) .setTitle(R.string.dialog_title);
+                    AlertDialog alert = builder.create();
+                    alert.setTitle("Results:");
+                    alert.setMessage( condition +"\n" + prob);
+                    alert.show();
+
+
+
+
+                } catch (JSONException e) {
+                    Toast.makeText(context,"Server Error",Toast.LENGTH_LONG).show();
+
+                }
+                //Log.i("VOLLEY", response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(context, error.getMessage(), Toast.LENGTH_SHORT).show();
+                //Log.v("VOLLEY", error.toString());
+            }
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                try {
+                    return savedata == null ? null : savedata.getBytes("utf-8");
+                } catch (UnsupportedEncodingException uee) {
+                    //Log.v("Unsupported Encoding while trying to get the bytes", data);
+                    return null;
+                }
+            }
+
+        };
+        requestQueue.add(stringRequest);
     }
 
 

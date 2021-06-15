@@ -119,7 +119,7 @@
         android:layout_marginEnd="64dp"
         android:layout_marginRight="64dp"
         android:ems="10"
-        android:inputType="number"
+        android:inputType="numberDecimal"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/etnAge"
@@ -216,7 +216,7 @@
         android:layout_marginStart="40dp"
         android:layout_marginLeft="40dp"
         android:layout_marginTop="10dp"
-        android:text="Rural"
+        android:text="Urban"
         android:textSize="24sp"
         app:layout_constraintStart_toEndOf="@+id/swResidence"
         app:layout_constraintTop_toBottomOf="@+id/tvMarried" />
@@ -298,14 +298,6 @@
         android:layout_marginRight="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/spinner_job" />
-
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        tools:layout_editor_absoluteX="144dp"
-        tools:layout_editor_absoluteY="648dp" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
